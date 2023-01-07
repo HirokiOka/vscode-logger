@@ -4,7 +4,7 @@
   "description": "records your source code",
   "publisher": "HirokiOka",
   "repository": "https://github.com/HirokiOka/vscode-logger",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "engines": {
     "vscode": "^1.71.0"
   },

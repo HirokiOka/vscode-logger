@@ -1,15 +1,19 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { parseScript } from 'esprima';
 import { ted } from 'edit-distance';
 import fetch from 'node-fetch';
 import { config } from 'dotenv';
-config({ path: __dirname + '/../.env' });
+config({ path: path.join(__dirname, '..', '.env') });
 
 
 const API_ENDPOINT: any = process.env.API_ENDPOINT;
 const API_KEY: any = process.env.API_KEY;
 
 async function insertOne(id: string, workspaceName: string, savedAt: string, code: string, sloc: number, ted: number) {
+  const filePath = vscode.window.activeTextEditor === undefined ? '' : vscode.window.activeTextEditor.document.uri.fsPath;
+  const filename = path.basename(filePath);
+  vscode.window.showInformationMessage(`filename: ${filename}`);
   const options = {
       method: 'POST',
       headers: {
@@ -24,6 +28,7 @@ async function insertOne(id: string, workspaceName: string, savedAt: string, cod
           'document': {
             'id': id,
             'workspace': workspaceName,
+            'filename': filename,
             'savedAt': savedAt,
             'code': code,
             'sloc': sloc,
