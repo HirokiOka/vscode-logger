@@ -6,40 +6,15 @@ import fetch from 'node-fetch';
 import { config } from 'dotenv';
 config({ path: path.join(__dirname, '..', '.env') });
 
+const MONGO_API_ENDPOINT: string = process.env.MONGO_API_ENDPOINT || '';
+const MONGO_API_KEY: string = process.env.MONGO_API_KEY || '';
+const CLASS_CODE: string = process.env.CLASS_CODE || '';
+const MIMAMORI_CODER_API_ENDPOINT: string = process.env.MIMAMORI_CODER_API_ENDPOINT || '';
 
-const API_ENDPOINT: any = process.env.API_ENDPOINT;
-const API_KEY: any = process.env.API_KEY;
-
-async function insertOne(id: string, workspaceName: string, savedAt: string, code: string, sloc: number, ted: number) {
-  const filePath = vscode.window.activeTextEditor === undefined ? '' : vscode.window.activeTextEditor.document.uri.fsPath;
-  const filename = path.basename(filePath);
-  vscode.window.showInformationMessage(`filename: ${filename}`);
-  const options = {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Request-Headers': '*',
-          'api-key': API_KEY
-      },
-      body: JSON.stringify({
-          'collection': 'codeparams',
-          'database': 'test',
-          'dataSource': 'Cluster0',
-          'document': {
-            'id': id,
-            'workspace': workspaceName,
-            'filename': filename,
-            'savedAt': savedAt,
-            'code': code,
-            'sloc': sloc,
-            'ted': ted
-          }
-        })
-      };
-
-  const res = await fetch(API_ENDPOINT, options);
+async function insertOne(endpoint: string, option: any) {
+  const res = await fetch(endpoint, option);
   const resJson = await res.json();
-  return resJson.insertedId;
+  return resJson;
 }
 
 
@@ -86,10 +61,60 @@ export async function activate(context: vscode.ExtensionContext) {
     const sloc: number = sourceCode.split('\n').length;
     const ted: number = calcTed(lastSourceCode, sourceCode);
     const wsName: any = vscode.workspace.name;
+    const filePath = vscode.window.activeTextEditor === undefined ? '' : vscode.window.activeTextEditor.document.uri.fsPath;
+    const filename = path.basename(filePath);
 
     try {
-      const res = await insertOne(studentId, wsName, currentDate, sourceCode, sloc, ted);
-      vscode.window.showInformationMessage(`code saved: ${res}`);
+      const mongoOption = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Request-Headers': '*',
+            'api-key': MONGO_API_KEY
+        },
+        body: JSON.stringify({
+            'collection': 'codeparams',
+            'database': 'test',
+            'dataSource': 'Cluster0',
+            'document': {
+              'studentId': studentId,
+              'filename': filename,
+              'workspace': wsName,
+              'savedAt': currentDate,
+              'code': sourceCode,
+              'sloc': sloc,
+              'ted': ted
+            }
+          })
+      };
+      const res = await insertOne(MONGO_API_ENDPOINT, mongoOption);
+      vscode.window.showInformationMessage(`code saved to mongo: ${res.insertedId}`);
+    } catch (e: any) {
+      vscode.window.showInformationMessage(e.message);
+    }
+
+    try {
+    const mimamoriOption = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Request-Headers': '*'
+        },
+        body: JSON.stringify({
+            'classCode': CLASS_CODE,
+            'document': {
+              'studentId': studentId,
+              'filename': filename,
+              'workspace': wsName,
+              'savedAt': currentDate,
+              'code': sourceCode,
+              'sloc': sloc,
+              'ted': ted
+            }
+          })
+        };
+      const res = await insertOne(MIMAMORI_CODER_API_ENDPOINT, mimamoriOption);
+      vscode.window.showInformationMessage(`code saved to mimamori coder: ${res.status}`);
     } catch (e: any) {
       vscode.window.showInformationMessage(e.message);
     }
