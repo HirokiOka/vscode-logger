@@ -41,7 +41,6 @@ function calcTed(lastSourceCode: string, currentSourceCode: string): number {
 
 export async function activate(context: vscode.ExtensionContext) {
   vscode.window.showInformationMessage('js-logger is activated');
-
   let studentId: any = context.workspaceState.get('studentId');
   if (studentId === undefined) {
     studentId = await vscode.window.showInputBox();

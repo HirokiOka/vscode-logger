@@ -4,3 +4,4 @@ js-logger/node_modules/
 js-logger/out/
 js-logger/.env
 dbConfig.ts
+.env
